@@ -47,6 +47,13 @@ async function run() {
       res.send(result);
     });
 
+    app.post('/wishlist', async (req, res) => {
+      const list = req.body;
+      const result = await wishlistCollection.insertOne(list);
+      res.send(result);
+    });
+
+
 
 app.listen(port, () => {
   console.log(`blog is waiting: ${port}`);
