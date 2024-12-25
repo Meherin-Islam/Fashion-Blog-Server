@@ -3,7 +3,6 @@ const cors = require('cors');
 const app = express();
 require('dotenv').config();
 const port = process.env.PORT || 5000;
-
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 
 app.use(cors());
@@ -73,6 +72,22 @@ async function run() {
       res.send(result);
     });
 
+    app.delete('/wishlist/:id', async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await wishlistCollection.deleteOne(query);
+      res.send(result);
+    });
+  } finally {
+    // await client.close();
+  }
+}
+
+run().catch(console.dir);
+
+app.get('/', (req, res) => {
+  res.send('blog');
+});
 
 app.listen(port, () => {
   console.log(`blog is waiting: ${port}`);
