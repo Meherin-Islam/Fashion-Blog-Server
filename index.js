@@ -27,12 +27,14 @@ async function run() {
     const blogsCollection = client.db('BlogWebsite').collection('blogs');
     const wishlistCollection = client.db('BlogWebsite').collection('wishlist');
 
+   
     app.get('/blogs', async (req, res) => {
       const cursor = blogsCollection.find();
       const result = await cursor.toArray();
       res.send(result);
     });
 
+    
     app.get('/blogs/:id', async (req, res) => {
       const id = req.params.id;
       const query = { _id: new ObjectId(id) };
@@ -40,23 +42,39 @@ async function run() {
       res.send(result);
     });
 
+    
     app.post('/blogs', async (req, res) => {
       const newBlog = req.body;
       const result = await blogsCollection.insertOne(newBlog);
       res.send(result);
     });
 
+    
     app.post('/wishlist', async (req, res) => {
       const list = req.body;
+
+      
+      const existingWishlistItem = await wishlistCollection.findOne({
+        userEmail: list.userEmail,
+        blogId: list.blogId,
+      });
+
+      if (existingWishlistItem) {
+        return res.status(400).json({ message: "This blog is already in your wishlist." });
+      }
+
+      
       const result = await wishlistCollection.insertOne(list);
       res.send(result);
     });
 
+    
     app.get('/wishlist', async (req, res) => {
       const email = req.query.email;
       const query = { userEmail: email };
       const result = await wishlistCollection.find(query).toArray();
 
+     
       for (const application of result) {
         console.log(application.blogId);
         const query1 = { _id: new ObjectId(application.blogId) };
@@ -72,11 +90,27 @@ async function run() {
       res.send(result);
     });
 
+    
     app.delete('/wishlist/:id', async (req, res) => {
       const id = req.params.id;
       const query = { _id: new ObjectId(id) };
       const result = await wishlistCollection.deleteOne(query);
       res.send(result);
+    });
+
+    
+    app.get('/wishlist/check', async (req, res) => {
+      const { userEmail, blogId } = req.query;
+      const existingWishlistItem = await wishlistCollection.findOne({
+        userEmail: userEmail,
+        blogId: blogId,
+      });
+
+      if (existingWishlistItem) {
+        return res.json({ exists: true });
+      }
+
+      res.json({ exists: false });
     });
   } finally {
     // await client.close();
