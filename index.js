@@ -25,7 +25,14 @@ async function run() {
     await client.db('admin').command({ ping: 1 });
     console.log('Pinged your deployment. You successfully connected to MongoDB!');
 
+    const blogsCollection = client.db('BlogWebsite').collection('blogs');
+    const wishlistCollection = client.db('BlogWebsite').collection('wishlist');
 
+    app.get('/blogs', async (req, res) => {
+      const cursor = blogsCollection.find();
+      const result = await cursor.toArray();
+      res.send(result);
+    });
 
 app.listen(port, () => {
   console.log(`blog is waiting: ${port}`);
