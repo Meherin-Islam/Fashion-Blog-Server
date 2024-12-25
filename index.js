@@ -53,6 +53,25 @@ async function run() {
       res.send(result);
     });
 
+    app.get('/wishlist', async (req, res) => {
+      const email = req.query.email;
+      const query = { userEmail: email };
+      const result = await wishlistCollection.find(query).toArray();
+
+      for (const application of result) {
+        console.log(application.blogId);
+        const query1 = { _id: new ObjectId(application.blogId) };
+        const blog = await blogsCollection.findOne(query1);
+
+        if (blog) {
+          application.title = blog.title;
+          application.image = blog.image;
+          application.category = blog.category;
+          application.short_description = blog.short_description;
+        }
+      }
+      res.send(result);
+    });
 
 
 app.listen(port, () => {
