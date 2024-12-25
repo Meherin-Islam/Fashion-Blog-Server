@@ -41,6 +41,13 @@ async function run() {
       res.send(result);
     });
 
+    app.post('/blogs', async (req, res) => {
+      const newBlog = req.body;
+      const result = await blogsCollection.insertOne(newBlog);
+      res.send(result);
+    });
+
+
 app.listen(port, () => {
   console.log(`blog is waiting: ${port}`);
 });
