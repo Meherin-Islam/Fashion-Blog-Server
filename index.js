@@ -26,8 +26,9 @@ async function run() {
 
     const blogsCollection = client.db('BlogWebsite').collection('blogs');
     const wishlistCollection = client.db('BlogWebsite').collection('wishlist');
+    const trendsCollection = client.db('BlogWebsite').collection('recent_trends');
 
-   
+    
     app.get('/blogs', async (req, res) => {
       const cursor = blogsCollection.find();
       const result = await cursor.toArray();
@@ -50,10 +51,11 @@ async function run() {
     });
 
     
+
+    
     app.post('/wishlist', async (req, res) => {
       const list = req.body;
 
-      
       const existingWishlistItem = await wishlistCollection.findOne({
         userEmail: list.userEmail,
         blogId: list.blogId,
@@ -63,20 +65,17 @@ async function run() {
         return res.status(400).json({ message: "This blog is already in your wishlist." });
       }
 
-      
       const result = await wishlistCollection.insertOne(list);
       res.send(result);
     });
 
-    
+   
     app.get('/wishlist', async (req, res) => {
       const email = req.query.email;
       const query = { userEmail: email };
       const result = await wishlistCollection.find(query).toArray();
 
-     
       for (const application of result) {
-        console.log(application.blogId);
         const query1 = { _id: new ObjectId(application.blogId) };
         const blog = await blogsCollection.findOne(query1);
 
@@ -112,7 +111,40 @@ async function run() {
 
       res.json({ exists: false });
     });
+
+    
+    app.get('/featured-blogs', async (req, res) => {
+      const blogs = await blogsCollection.find().toArray();
+
+      
+      const featuredBlogs = blogs
+        .map((blog) => ({
+          ...blog,
+          wordCount: blog.long_description ? blog.long_description.split(' ').length : 0,
+        }))
+        .sort((a, b) => b.wordCount - a.wordCount) 
+        .slice(0, 10); 
+
+      res.send(featuredBlogs);
+    });
+
+   
+    app.get('/recent_trends', async (req, res) => {
+      const cursor = trendsCollection.find();
+      const result = await cursor.toArray();
+      res.send(result);
+    });
+
+    
+    app.get('/recent_trends/:id', async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await trendsCollection.findOne(query);
+      res.send(result);
+    });
+
   } finally {
+    
     // await client.close();
   }
 }
@@ -124,5 +156,5 @@ app.get('/', (req, res) => {
 });
 
 app.listen(port, () => {
-  console.log(`blog is waiting: ${port}`);
+  console.log(`Server is running on port ${port}`);
 });
